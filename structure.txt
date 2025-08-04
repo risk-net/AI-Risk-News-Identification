@@ -1,0 +1,100 @@
+.
+├── config
+│   ├── Data_Sources-CommonCrawlNews-config.ini
+│   ├── Data_Sources-Crawled_Dataset-config.ini
+│   ├── Identification_Evaluation-config.ini
+│   ├── Identification_Method-CommonCrawlNews-keyword_filter-config.ini
+│   ├── Identification_Method-CommonCrawlNews-llm_filter-config.ini
+│   └── Identification_Method-OpenNewsArchive-llm_filter-config.ini
+├── data
+│   ├── aiaaic_processed_data.jsonl
+│   ├── AIAAIC_Repository.xlsx
+│   ├── AIID_incidents.csv
+│   ├── AIID_reports.csv
+│   ├── README.md
+│   ├── README_zh-CN.md
+│   ├── standard_cases.jsonl
+│   ├── standard_incidents_classification.json
+│   ├── standard_incidents_human_label_classification.json
+│   └── standard_incidents.jsonl
+├── download_dir
+├── keywords
+│   ├── Identification_Evaluation-custom_phrases.txt
+│   ├── Identification_Evaluation-keywords.txt
+│   ├── Identification_Evaluation-unique_stopwords.txt
+│   ├── Identification_Method-CommonCrawlNews-keyword_filter-keywords.txt
+│   ├── Identification_Method-Hot_list_word_Datasets-keyword_filter-keywords.txt
+│   └── Identification_Method-OpenNewsArchive-keyword_filter-keywords.txt
+├── logs
+├── prompt
+│   ├── Data_Sources-AIAAIC-prompt.md
+│   ├── Identification_Method-CommonCrawlNews-llm_filter-prompt.md
+│   ├── Identification_Method-Hot_list_word_Datasets-llm_filter-prompt.md
+│   └── Identification_Method-OpenNewsArchive_Datasets-llm_filter-prompt.md
+├── README.md
+├── README_zh-CN.md
+├── requirements.txt
+├── src
+│   ├── Data_Sources
+│   │   ├── AIAAIC
+│   │   │   ├── case_model.py
+│   │   │   ├── llm_crawl_news.py
+│   │   │   └── process_AIAAIC.py
+│   │   ├── AIID
+│   │   │   └── process_AIID.py
+│   │   ├── CommonCrawlNews
+│   │   │   └── process_CommonCrawlNews.py
+│   │   ├── Crawled_Dataset
+│   │   │   ├── auto_crawler.py
+│   │   │   ├── crawlers
+│   │   │   │   ├── 36kr_news_crawler.py
+│   │   │   │   ├── caseinfo.py
+│   │   │   │   ├── check_AIGCrisk_title.py
+│   │   │   │   ├── DuplicateDataCase.py
+│   │   │   │   ├── get_base_url.py
+│   │   │   │   ├── get_element_with_retry.py
+│   │   │   │   ├── img_to_base64.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── people_news_crawler.py
+│   │   │   │   ├── tencent_news_crawler.py
+│   │   │   │   ├── thepaper_news_crawler.py
+│   │   │   │   ├── time_convert.py
+│   │   │   │   ├── wechat_crawler.py
+│   │   │   │   └── xinhua_news_crawler.py
+│   │   │   ├── crawler_utils.py
+│   │   │   ├── news_web_crawler.py
+│   │   │   └── README.md
+│   │   ├── Hot_list_word_Dataset
+│   │   │   ├── crawldouyin_hotlist.py
+│   │   │   ├── crawltoutiao_hotlist.py
+│   │   │   ├── crawlv2ex_hotlist.py
+│   │   │   ├── crawlweibo_hotlist.py
+│   │   │   └── crawlzhihu_hotlist.py
+│   │   └── OpenNewsArchive
+│   │       └── data_collecting_OpenNewsArchive.py
+│   ├── Identification_Evaluation
+│   │   ├── precision_and_recall.py
+│   │   ├── README.md
+│   │   └── validate_AIID_AIAAIC.py
+│   └── Identification_Method
+│       ├── CommonCrawlNews
+│       │   ├── keyword_filter
+│       │   │   └── process_wrac.py
+│       │   └── llm_filter
+│       │       ├── ai_risk_detection_batch.py
+│       │       └── callmodel.py
+│       ├── Hot_list_word_Dataset
+│       │   ├── keyword_filter
+│       │   │   └── filter_title.py
+│       │   └── llm_filter
+│       │       ├── callmodel.py
+│       │       └── filter_title_llm.py
+│       └── OpenNewsArchive
+│           ├── keyword_filter
+│           │   └── process_OpenNews.py
+│           └── llm_filter
+│               ├── ai_risk_detection_batch.py
+│               └── callmodel.py
+└── structure.txt
+
+26 directories, 71 files
