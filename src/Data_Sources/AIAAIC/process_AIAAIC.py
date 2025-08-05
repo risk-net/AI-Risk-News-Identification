@@ -48,7 +48,7 @@ def aiaaic_parse_url(url):
 #注意修改文件路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # 构建目标文件路径
-AIAAIC_file_path = os.path.join(current_dir, "../../../data/AIAAIC_Repository.xlsx")
+AIAAIC_file_path = os.path.join(current_dir, "../../../../data/AIAAIC_Repository.xlsx")
 df = pd.read_excel(AIAAIC_file_path, sheet_name="Incidents", skiprows=[0,2])
 filtered_data = df[df['Description/links'].notna()]
 filtered_data = filtered_data.drop_duplicates(subset=['AIAAIC ID#']).set_index('AIAAIC ID#')
@@ -69,7 +69,7 @@ for aiaaic_id, details in headline_links_dict.items():
 #注意修改文件路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # 构建目标文件路径
-AIAAIC_output_path = os.path.join(current_dir, "../../../data/aiaaic_processed_data.jsonl")
+AIAAIC_output_path = os.path.join(current_dir, "../../../../data/aiaaic_processed_data.jsonl")
 with open(AIAAIC_output_path, 'w', encoding='utf-8') as file:
     for key, value in headline_links_dict.items():
         json.dump({key: value}, file, ensure_ascii=False)

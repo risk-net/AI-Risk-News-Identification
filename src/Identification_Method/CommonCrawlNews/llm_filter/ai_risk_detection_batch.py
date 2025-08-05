@@ -11,7 +11,7 @@ import threading  # 用于线程安全的计数器
 from callmodel import call_model, detect_ai_risk_batches  # 豆包API调用模块
 # 注意根据实际调用的API修改导入路径和函数名
 current_dir = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(current_dir, "../../../config/Identification_Method-CommonCrawlNews-llm_filter-config.ini")
+config_path = os.path.join(current_dir, "../../../../config/Identification_Method-CommonCrawlNews-llm_filter-config.ini")
 # 初始化配置
 config = configparser.ConfigParser()
 
@@ -59,7 +59,7 @@ logger = setup_logger()
 
 
 # 构建目标文件路径
-prompt_path = os.path.join(current_dir, "../../../prompt/Identification_Method-CommonCrawlNews-llm_filter-prompt.ini")
+prompt_path = os.path.join(current_dir, "../../../../prompt/Identification_Method-CommonCrawlNews-llm_filter-prompt.ini")
 with open(prompt_path, 'r', encoding='utf-8') as f:
     prompt_content = f.read()
 # 提示词

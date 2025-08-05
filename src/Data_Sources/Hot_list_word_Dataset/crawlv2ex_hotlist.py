@@ -63,7 +63,7 @@ end_date = datetime(2025, 3, 5)
 hotlist_dict = asyncio.run(fetch_v2ex_hotlist(start_date, end_date))
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # 构建目标文件路径
-hotlist_path = os.path.join(current_dir, "../../../data/v2ex_hotlist.json")
+hotlist_path = os.path.join(current_dir, "../../../download_dir/v2ex_hotlist.json")
 # 将结果保存为JSON文件
 with open(hotlist_path, "w", encoding="utf-8") as json_file:
     json.dump(hotlist_dict, json_file, ensure_ascii=False, indent=4)

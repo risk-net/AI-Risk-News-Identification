@@ -14,7 +14,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import configparser
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(current_dir, "../../../config/Identification_Method-OpenNewsArchive-llm_filter-config.ini")
+config_path = os.path.join(current_dir, "../../../../config/Identification_Method-OpenNewsArchive-llm_filter-config.ini")
 # 初始化配置
 config = configparser.ConfigParser()
 
@@ -29,7 +29,7 @@ CONTENT_LIMIT = ONA_config.getint("CONTENT_LIMIT", 10000)  # 默认内容限制�
 # === 全局推理计数器 ===
 global_inference_counter = 0
 
-prompt_path= os.path.join(current_dir, "../../../keyword/Identification_Method-OpenNewsArchive_Datasets-llm_filter-prompt.md")
+prompt_path= os.path.join(current_dir, "../../../../prompt/Identification_Method-OpenNewsArchive_Datasets-llm_filter-prompt.md")
 with open(prompt_path, 'r', encoding='utf-8') as f:
     md_content = f.read()
 # 提示词

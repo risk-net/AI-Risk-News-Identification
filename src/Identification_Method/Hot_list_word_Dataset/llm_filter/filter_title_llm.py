@@ -8,11 +8,11 @@ from callmodel import call_model
 import os
 # 读取CSV文件
 current_dir = os.path.dirname(os.path.abspath(__file__))
-filter_dataset_file= os.path.join(current_dir, "../../../data/filtered_douyin_hotlist.csv")# 关键词文件路径
+filter_dataset_file= os.path.join(current_dir, "../../../../download_dir/filtered_douyin_hotlist.csv")# 关键词文件路径
 #注意修改csv文件名称，路径
 # 这里注意修改为对应的过滤后热搜词csv文件路径
 df = pd.read_csv(filter_dataset_file)
-prompt_path = os.path.join(current_dir, "../../../prompt/Identification_Method-Hot_list_word_Datasets-llm_filter-prompt.md")
+prompt_path = os.path.join(current_dir, "../../../../prompt/Identification_Method-Hot_list_word_Datasets-llm_filter-prompt.md")
 with open(prompt_path, 'r', encoding='utf-8') as f:
     prompt_content = f.read()
 # 提示词
@@ -33,6 +33,6 @@ for i in range(0, len(df), 5):
 
 # 将筛选后的数据保存到新的CSV文件
 filtered_df = pd.DataFrame(filtered_titles)
-filter_dataset_csv_path = os.path.join(current_dir, "../../../data/filtered_llm_dataset.csv")
+filter_dataset_csv_path = os.path.join(current_dir, "../../../../download_dir/filtered_llm_dataset.csv")
 #注意修改csv文件名称，路径
 filtered_df.to_csv(filter_dataset_csv_path, index=False)

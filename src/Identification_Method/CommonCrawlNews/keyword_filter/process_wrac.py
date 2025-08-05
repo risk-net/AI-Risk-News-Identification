@@ -26,7 +26,9 @@ import configparser
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # 构建目标文件路径
-config_path = os.path.join(current_dir, "../../../config/Identification_Method-CommonCrawlNews-keyword_filter-config.ini")
+config_path = os.path.join(current_dir, "../../../../config/Identification_Method-CommonCrawlNews-keyword_filter-config.ini")
+if not os.path.exists(config_path):
+    raise FileNotFoundError(f"配置文件不存在: {config_path}")
 # 初始化配置
 config = configparser.ConfigParser()
 config.read(config_path)
@@ -40,8 +42,7 @@ NLTK_DATA = CCN_config.get("nltk_data", "punkt,stopwords,wordnet")
 NLTK_DATA = [data.strip() for data in NLTK_DATA.split(",")]
 WARC_FOLDER = CCN_config.get("WARC_FOLDER")
 OUTPUT_DIR = CCN_config.get("OUTPUT_DIR")
-LOG_FILE = CCN_config.get("LOG_FILE")
-LOG_FILE =f"{LOG_FILE}_{year}_{star_month}-{end_month}.log"
+LOG_FILE = os.path.join(current_dir,CCN_config.get("LOG_FILE"))
 KEYWORDS_FILE = os.path.join(current_dir,CCN_config.get("KEYWORDS_FILE"))
 MAX_WORKERS = CCN_config.getint("max_workers", 32)
 #下载nltk数据

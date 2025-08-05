@@ -24,7 +24,7 @@ def load_config():
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         # 构建目标文件路径
-        config_path = os.path.join(current_dir, "../../../config/Data_Sources-Crawled_Dataset-config.ini")
+        config_path = os.path.join(current_dir, "../../../../config/Data_Sources-Crawled_Dataset-config.ini")
         config.read(config_path, encoding='utf-8')
         
         # 标准化配置值
@@ -71,17 +71,18 @@ def save_results(results, other_results, site_name):
     current_date = datetime.now().strftime('%Y-%m-%d')
     
     # 保存AIGC相关结果
-    aigc_filename = f'results/AIGC_results_{site_name}_{current_date}.json'
+
+    airisk_filename = os.path.join(current_dir,f'../../../download_dir/Crawled_Dataset-AI_risk_news-{site_name}_{current_date}.json')
     with open(aigc_filename, 'w', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=4)
     
     # 保存所有结果
-    all_filename = f'results/all_results_{site_name}_{current_date}.json'
+    all_filename = os.path.join(current_dir,f'../../../download_dir/Crawled_Dataset-all_news-{site_name}_{current_date}.json')
     with open(all_filename, 'w', encoding='utf-8') as f:
         json.dump(other_results, f, ensure_ascii=False, indent=4)
         
-    logging.info(f"结果已保存到 {aigc_filename} 和 {all_filename}")
-    return aigc_filename, all_filename
+    logging.info(f"结果已保存到 {airisk_filename} 和 {all_filename}")
+    return airisk_filename, all_filename
 
 def upload_results(site_name, aigc_file, all_file):
     """上传爬取结果到API"""

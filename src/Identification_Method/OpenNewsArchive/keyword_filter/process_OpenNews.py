@@ -7,8 +7,19 @@ from functools import partial
 from multiprocessing import Pool
 # 初始化NLTK（这里假设你已经安装并配置好NLTK）
 import nltk
+import configparser
 current_dir = os.path.dirname(os.path.abspath(__file__))
-keywords_file= os.path.join(current_dir, "../../../keyword/Identification_Method-OpenNewsArchive-keyword_filter-keywords.txt")# 关键词文件路径
+config_path = os.path.join(current_dir, "../../../../config/Identification_Method-OpenNewsArchive-keyword_filter-config.ini")
+# 初始化配置
+config = configparser.ConfigParser()
+
+config.read(config_path)
+ONA_config = config["OpenNewsArchive"]
+BASE_INPUT_DIR = os.path.join(current_dir,ONA_config.get("BASE_INPUT_DIR"))
+BASE_OUTPUT_DIR = os.path.join(current_dir,ONA_config.get("BASE_OUTPUT_DIR"))  # 输出目录
+JSONL_FILE = os.path.join(current_dir,ONA_config.get("JSONL_FILE"))
+KEYWORDS_FILE = os.path.join(current_dir, ONA_config.get("KEYWORDS_FILE"))
+
 
 # 关键词处理
 class KeywordProcessor:
@@ -19,7 +30,7 @@ class KeywordProcessor:
 
     def _load_keywords(self):
         try:
-            with open(keywords_file, 'r', encoding='utf-8') as f:
+            with open(KEYWORDS_FILE, 'r', encoding='utf-8') as f:
                 return set(line.strip().lower() for line in f if line.strip())
         except Exception as e:
             logger.error(f"Failed to load keywords: {e}")
@@ -71,13 +82,13 @@ def main(input_dir):
     logger.info(f"Found {len(all_ai_news)} AI-related news in total")
 
     # 可以在这里将筛选出的新闻保存到文件中
-    output_file = os.path.join(current_dir, "../../../data/OpenNewsArchive-ai_related_news.jsonl")
+    output_file = JSONL_FILE # 输出文件路径
     with open(output_file, 'w', encoding='utf-8') as f:
         for news in all_ai_news:
             f.write(json.dumps(news, ensure_ascii=False) + "\n")
     # 假设jsonl文件名为data.jsonl，你可以根据实际情况修改
 
-    save_folder_path = os.path.join(current_dir, "../../../data/OpenNewsArchive-AI_news")
+    save_folder_path = BASE_OUTPUT_DIR
 
     # 读取jsonl文件
     with open(output_file, 'r', encoding='utf-8') as file:
@@ -89,7 +100,7 @@ def main(input_dir):
             with open(save_file_path, 'w', encoding='utf-8') as output_file:
                 output_file.write(text_content)
 if __name__ == "__main__":
-    input_directory = os.path.join(current_dir,"../../../download_dir/OpenNewsArchive/OpenDataLab___OpenNewsArchive/zh") 
+    input_directory = BASE_INPUT_DIR
     # 替换为你的下载输入目录
     # 这里假设下载目录为OpenNewsArchive/zh   具体根据实际情况修改
     main(input_directory)

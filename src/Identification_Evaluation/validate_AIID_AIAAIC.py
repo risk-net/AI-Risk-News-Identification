@@ -14,17 +14,30 @@ from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 import ahocorasick  # ✅ 新增依赖
 import configparser
-# 初始化NLTK资源
-nltk.download('stopwords', quiet=True)
-nltk.download('punkt', quiet=True)
-nltk.download('wordnet', quiet=True)
+def ensure_nltk_resource(resource):
+    try:
+        nltk.data.find(resource)
+    except LookupError:
+        print(f"缺少 {resource}，尝试下载中...")
+        nltk.download(resource.split("/")[-1])
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(current_dir, "../../../config/Identification_Evaluation-config.ini")
+ensure_nltk_resource('corpora/stopwords')
+ensure_nltk_resource('tokenizers/punkt')
+ensure_nltk_resource('corpora/wordnet')
+print("NLTK资源下载完成")
+try:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+except NameError:
+    current_dir = os.getcwd()  # fallback
+config_path = os.path.join(current_dir, "../../config/Identification_Evaluation-config.ini")
 # 初始化配置
 config = configparser.ConfigParser()
+if not os.path.exists(config_path):
+    raise FileNotFoundError(f"配置文件不存在: {config_path}")
 
 config.read(config_path)
+if "Evaluation" not in config:
+    raise KeyError("配置文件缺少 'Evaluation' 区块")
 config = config["Evaluation"]
 KEYWORDS_FILE = os.path.join(current_dir, config.get("KEYWORDS_FILE"))
 PHRASES_FILE = os.path.join(current_dir, config.get("PHRASES_FILE"))
@@ -33,7 +46,7 @@ LOG_FILE = os.path.join(current_dir, config.get("LOG_FILE"))
 AI_RELATED_OUTPUT = os.path.join(current_dir, config.get("AI_RELATED_OUTPUT"))
 AI_UNRELATED_OUTPUT = os.path.join(current_dir, config.get("AI_UNRELATED_OUTPUT"))
 BASE_INPUT_FILE = os.path.join(current_dir, config.get("BASE_INPUT_FILE"))
-
+print(f"当前工作目录: {current_dir}")
 
 # 初始化日志
 logging.basicConfig(
@@ -67,8 +80,16 @@ class KeywordProcessor:
         self.custom_stopwords = set()
         self.en_default_stopwords = set(stopwords.words('english'))
 
+        # ✅ 初始化 phrases 列表
+        self.phrases = []
+
+        # ✅ 正确定义 self.phrases_file
+        self.phrases_file = PHRASES_FILE
+
         self.keywords = self._load_keywords()
-        self.phrases = self._load_phrases()
+        self._load_phrases()
+
+        # ✅ 现在 phrases 已经加载完毕，可以传给 PhraseMatcher
         self.phrase_matcher = PhraseMatcher(self.phrases)
 
         if stopwords_file:
@@ -87,14 +108,21 @@ class KeywordProcessor:
 
     def _load_phrases(self):
         try:
-            if not os.path.exists(PHRASES_FILE):
-                logger.warning(f"短语词典文件 {PHRASES_FILE} 不存在")
-                return set()
-            with open(PHRASES_FILE, 'r', encoding='utf-8') as f:
-                return {line.strip().lower() for line in f if line.strip()}
+            with open(self.phrases_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    phrase = line.strip().lower()
+                    if phrase:
+                        self.phrases.append(phrase)
         except Exception as e:
-            logger.error(f"加载短语词典失败：{e}")
-            return set()
+            logger.error(f"加载短语文件失败：{e}")
+            sys.exit(1)  # 强制退出程序
+
+        if not self.phrases:
+            logger.error("短语词典为空，程序终止。")
+            sys.exit(1)
+
+        logger.info(f"PHRASES_FILE 路径为：{self.phrases_file}")
+        logger.info(f"加载短语词典，数量：{len(self.phrases)}")
 
     def load_stopwords(self, stopwords_file):
         try:
@@ -179,6 +207,7 @@ def process_jsonl_file(file_path, keyword_processor):
                         continue
 
                     lang = keyword_processor.detect_language(content)
+                    logger.debug(f"{file_path} 第{line_num}行 - 语言识别为 {lang}")
                     keywords = keyword_processor.extract_keywords(content, lang)
                     is_ai_related = not keyword_processor.keywords.isdisjoint(keywords)
 
@@ -216,7 +245,7 @@ def save_results(related, unrelated):
 def main(input_files):
     start_time = time.time()
     logger.info(f"开始处理，共{len(input_files)}个文件")
-    keyword_processor = KeywordProcessor(stopwords_file=Config.STOPWORDS_FILE)
+    keyword_processor = KeywordProcessor(stopwords_file=STOPWORDS_FILE)
 
     all_related = []
     all_unrelated = []

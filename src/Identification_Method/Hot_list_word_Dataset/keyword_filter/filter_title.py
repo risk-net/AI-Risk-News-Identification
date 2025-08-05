@@ -8,7 +8,7 @@ import urllib.parse
 
 # 初始化配置
 current_dir = os.path.dirname(os.path.abspath(__file__))
-keywords_file= os.path.join(current_dir, "../../../keyword/Identification_Method-Hot_list_word_Datasets-keyword_filter-keywords.txt")# 关键词文件路径
+keywords_file= os.path.join(current_dir, "../../../../keywords/Identification_Method-Hot_list_word_Datasets-keyword_filter-keywords.txt")# 关键词文件路径
 
 def load_keywords(keywords_file):
         try:
@@ -32,11 +32,11 @@ def contains_keyword(title):
 # 读取JSON文件
 # 这里注意修改为对应的热搜词json文件路径
 # 这里以douyin热搜词为例
-dataset_path = os.path.join(current_dir, "../../../data/douyin_hotlist.json")
+dataset_path = os.path.join(current_dir, "../../../../download_dir/douyin_hotlist.json")
 with open(dataset_path, 'r', encoding='utf-8') as f:
     data = json.load(f)
 #注意修改json文件名称，路径
-dataset_csv_path= os.path.join(current_dir, "../../../data/douyin_hotlist.csv")
+dataset_csv_path= os.path.join(current_dir, "../../../../download_dir/douyin_hotlist.csv")
 # 打开CSV文件进行写入
 #注意修改csv文件名称，路径
 with open(dataset_csv_path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -60,6 +60,6 @@ df = pd.read_csv(dataset_csv_path)
 filtered_df = df[df['title'].apply(contains_keyword)]
 # 将筛选后的数据保存到新的CSV文件
 #注意修改csv文件名称，路径
-filtered_dataset_path = os.path.join(current_dir, "../../../data/filtered_douyin_hotlist.csv")
+filtered_dataset_path = os.path.join(current_dir, "../../../../download_dir/filtered_douyin_hotlist.csv")
 filtered_df.to_csv(filtered_dataset_path, index=False)
 

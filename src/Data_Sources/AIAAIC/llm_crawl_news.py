@@ -10,7 +10,7 @@ from case_model import RiskCaseCreate
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # 构建目标文件路径
-prompt_path = os.path.join(current_dir, "../../../prompt/Data_Sources-AIAAIC-prompt.md")
+prompt_path = os.path.join(current_dir, "../../../../prompt/Data_Sources-AIAAIC-prompt.md")
 with open(prompt_path, 'r', encoding='utf-8') as f:
     prompt_content = f.read()
 # 提示词
@@ -93,15 +93,15 @@ if __name__ == "__main__":
     urls1=[]
     urls2=[]
     urls3=[]
-    aiaaic_data_path = os.path.join(current_dir, "aiaaic_processed_data.jsonl")
+    aiaaic_data_path = os.path.join(current_dir, "../../../../data/aiaaic_processed_data.jsonl")
     aiaaic_dict = read_jsonl_to_dict(aiaaic_data_path)   
     # 输出读取到的数据
     for id, detail in aiaaic_dict.items():
         urls.extend(detail.get("parsed_links"))
     
     # 构建目标文件路径
-    AIAAIC_output_path = os.path.join(current_dir, "../../../data/AIAAIC_output.jsonl")
-    AIAAIC_error_path = os.path.join(current_dir, "../../../error/AIAAIC_error.jsonl")
+    AIAAIC_output_path = os.path.join(current_dir, "../../../../download_dir/AIAAIC_output.jsonl")
+    AIAAIC_error_path = os.path.join(current_dir, "../../../../error/AIAAIC_error.jsonl")
     # 注意修改输出文件路径
     asyncio.run(async_crawl(out_put_file=AIAAIC_output_path,urls=urls,error_file=AIAAIC_error_path))
 
