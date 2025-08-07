@@ -22,7 +22,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import configparser
-
+import ahocorasick
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # 构建目标文件路径
@@ -33,6 +33,7 @@ if not os.path.exists(config_path):
 config = configparser.ConfigParser()
 config.read(config_path)
 CCN_config = config["CommonCrawlNews"]
+PHRASE_FILE = os.path.join(current_dir, CCN_config.get("PHRASES_FILE"))
 year = CCN_config.get("year", "2024")
 months_str = CCN_config.get("months", "1,2,3,4,5,6,7,8,9,10,11,12")
 months = [int(m.strip()) for m in months_str.split(",")]
@@ -40,29 +41,11 @@ star_month = min(months)
 end_month = max(months)
 NLTK_DATA = CCN_config.get("nltk_data", "punkt,stopwords,wordnet")
 NLTK_DATA = [data.strip() for data in NLTK_DATA.split(",")]
-WARC_FOLDER = CCN_config.get("WARC_FOLDER")
-OUTPUT_DIR = CCN_config.get("OUTPUT_DIR")
+WARC_FOLDER = os.path.join(current_dir,CCN_config.get("WARC_FOLDER"))
+OUTPUT_DIR = os.path.join(current_dir,CCN_config.get("OUTPUT_DIR"))
 LOG_FILE = os.path.join(current_dir,CCN_config.get("LOG_FILE"))
 KEYWORDS_FILE = os.path.join(current_dir,CCN_config.get("KEYWORDS_FILE"))
 MAX_WORKERS = CCN_config.getint("max_workers", 32)
-#下载nltk数据
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords')
-
-try:
-    nltk.data.find('corpora/wordnet')
-except LookupError:
-    nltk.download('wordnet')
 # 初始化日志
 logging.basicConfig(
     level=logging.INFO,
@@ -86,31 +69,71 @@ def init_nltk():
             nltk.download(data)
             print(f"Downloaded NLTK data: {data}")
 init_nltk()
+class PhraseMatcher:
+    def __init__(self, phrase_file):
+        self.automaton = ahocorasick.Automaton()
+        self._load_phrases(phrase_file)
 
+    def _load_phrases(self, phrase_file):
+        with open(phrase_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                phrase = line.strip()
+                if phrase:
+                    self.automaton.add_word(phrase.lower(), phrase.lower())
+        self.automaton.make_automaton()
+
+    def find_matches(self, text):
+        text = text.lower()
+        return {match for _, match in self.automaton.iter(text)}
 # 关键词处理
 class KeywordProcessor:
     def __init__(self):
-        self.keywords = self._load_keywords()
         self.lemmatizer = WordNetLemmatizer()
         self.en_stopwords = set(stopwords.words('english'))
-    
-    def _load_keywords(self):
+        self.phrase_matcher = PhraseMatcher(PHRASE_FILE)
+
         try:
             with open(KEYWORDS_FILE, 'r', encoding='utf-8') as f:
-                return set(line.strip().lower() for line in f if line.strip())
+                self.keywords = set(line.strip().lower() for line in f if line.strip())
         except Exception as e:
             logger.error(f"Failed to load keywords: {e}")
-            return set()
-    
+            self.keywords = set()
+
     def extract_keywords(self, text, lang, top_n=10):
-        if lang == 'zh':
-            return set(jieba.analyse.extract_tags(text, topK=top_n, withWeight=False))
-        elif lang == 'en':
-            tokens = [self.lemmatizer.lemmatize(t.lower()) 
-                     for t in word_tokenize(text) 
-                     if t.isalpha() and t.lower() not in self.en_stopwords]
-            return set(w for w, _ in nltk.FreqDist(tokens).most_common(top_n))
-        return set()
+        lower_text = text.lower()
+        phrase_matches = self.phrase_matcher.find_matches(lower_text)
+
+        # 过滤掉短语中的词（用于剩余关键词分析）
+        phrase_tokens = set()
+        for phrase in phrase_matches:
+            if lang == 'en':
+                phrase_tokens.update(word_tokenize(phrase))
+            elif lang == 'zh':
+                phrase_tokens.update(jieba.lcut(phrase))
+
+        residual_keywords = set()
+
+        if lang == 'en':
+            tokens = [
+                self.lemmatizer.lemmatize(t.lower())
+                for t in word_tokenize(lower_text)
+                if t.isalpha() and
+                   t.lower() not in self.en_stopwords and
+                   t.lower() not in phrase_tokens
+            ]
+            residual_keywords = {w for w, _ in nltk.FreqDist(tokens).most_common(top_n)}
+
+        elif lang == 'zh':
+            # 排除短语中的词
+            tokens = [t for t in jieba.lcut(text) if t not in phrase_tokens]
+            freq = {}
+            for token in tokens:
+                if len(token) > 1:
+                    freq[token] = freq.get(token, 0) + 1
+            residual_keywords = set(sorted(freq, key=freq.get, reverse=True)[:top_n])
+
+        return phrase_matches.union(residual_keywords)
+
 
 keyword_processor = KeywordProcessor()
 

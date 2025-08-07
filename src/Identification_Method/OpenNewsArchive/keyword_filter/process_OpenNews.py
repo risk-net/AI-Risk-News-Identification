@@ -8,6 +8,7 @@ from multiprocessing import Pool
 # 初始化NLTK（这里假设你已经安装并配置好NLTK）
 import nltk
 import configparser
+import ahocorasick
 current_dir = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(current_dir, "../../../../config/Identification_Method-OpenNewsArchive-keyword_filter-config.ini")
 # 初始化配置
@@ -19,14 +20,32 @@ BASE_INPUT_DIR = os.path.join(current_dir,ONA_config.get("BASE_INPUT_DIR"))
 BASE_OUTPUT_DIR = os.path.join(current_dir,ONA_config.get("BASE_OUTPUT_DIR"))  # 输出目录
 JSONL_FILE = os.path.join(current_dir,ONA_config.get("JSONL_FILE"))
 KEYWORDS_FILE = os.path.join(current_dir, ONA_config.get("KEYWORDS_FILE"))
+PHRASES_FILE = os.path.join(current_dir, ONA_config.get("PHRASES_FILE"))
+
+class PhraseMatcher:
+    def __init__(self, phrase_file):
+        self.automaton = ahocorasick.Automaton()
+        self._load_phrases(phrase_file)
+
+    def _load_phrases(self, phrase_file):
+        with open(phrase_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                phrase = line.strip()
+                if phrase:
+                    self.automaton.add_word(phrase.lower(), phrase.lower())
+        self.automaton.make_automaton()
+
+    def find_matches(self, text):
+        text = text.lower()
+        return {match for _, match in self.automaton.iter(text)}
 
 
-# 关键词处理
 class KeywordProcessor:
     def __init__(self):
         self.keywords = self._load_keywords()
-        self.lemmatizer = nltk.stem.WordNetLemmatizer()
-        self.en_stopwords = set(nltk.corpus.stopwords.words('english'))
+        self.lemmatizer = WordNetLemmatizer()
+        self.en_stopwords = set(stopwords.words('english'))
+        self.phrase_matcher = PhraseMatcher(PHRASES_FILE)
 
     def _load_keywords(self):
         try:
@@ -37,15 +56,35 @@ class KeywordProcessor:
             return set()
 
     def extract_keywords(self, text, lang, top_n=10):
-        if lang == 'zh':
-            import jieba.analyse
-            return set(jieba.analyse.extract_tags(text, topK=top_n, withWeight=False))
-        elif lang == 'en':
-            tokens = [self.lemmatizer.lemmatize(t.lower())
-                      for t in nltk.word_tokenize(text)
-                      if t.isalpha() and t.lower() not in self.en_stopwords]
-            return set(w for w, _ in nltk.FreqDist(tokens).most_common(top_n))
-        return set()
+        lower_text = text.lower()
+        phrase_matches = self.phrase_matcher.find_matches(lower_text)
+
+        phrase_tokens = set()
+        for phrase in phrase_matches:
+            if lang == 'en':
+                phrase_tokens.update(word_tokenize(phrase))
+            elif lang == 'zh':
+                phrase_tokens.update(jieba.lcut(phrase))
+
+        residual_keywords = set()
+
+        if lang == 'en':
+            tokens = [
+                self.lemmatizer.lemmatize(t.lower())
+                for t in word_tokenize(lower_text)
+                if t.isalpha() and t.lower() not in self.en_stopwords and t.lower() not in phrase_tokens
+            ]
+            residual_keywords = {w for w, _ in nltk.FreqDist(tokens).most_common(top_n)}
+
+        elif lang == 'zh':
+            tokens = [t for t in jieba.lcut(text) if t not in phrase_tokens]
+            freq = {}
+            for token in tokens:
+                if len(token) > 1:
+                    freq[token] = freq.get(token, 0) + 1
+            residual_keywords = set(sorted(freq, key=freq.get, reverse=True)[:top_n])
+
+        return phrase_matches.union(residual_keywords)
 
 keyword_processor = KeywordProcessor()
 
@@ -103,5 +142,7 @@ if __name__ == "__main__":
     input_directory = BASE_INPUT_DIR
     # 替换为你的下载输入目录
     # 这里假设下载目录为OpenNewsArchive/zh   具体根据实际情况修改
+    # 输入目录应该包含多个jsonl文件
+    # 如果输入的数据结构不一致，请根据实际情况调整主函数，具体处理函数不用调整
     main(input_directory)
     
